@@ -30,7 +30,6 @@ def add_db_docs(vectorstore, data_path, embeddings_model):
     Load documents from the folder, check if they exist in the vectorstore, and add them if they don't.
     """
     documents = load_documents(data_path)
-    # Add new documents
     for document in documents:
         content = document.page_content
         embedding = embeddings_model.embed_query(content)

@@ -12,7 +12,6 @@ os.makedirs(history_dir, exist_ok=True)
 store = {}
 
 def get_session_history(session_id: str) -> BaseChatMessageHistory:
-    """Retrieve the chat history for a given session ID."""
     if session_id in store:
         return store[session_id]
 
@@ -35,7 +34,6 @@ def get_session_history(session_id: str) -> BaseChatMessageHistory:
     return history
 
 def save_session_history(session_id: str):
-    """Save the chat history for a given session ID."""
     if session_id not in store:
         return
 
