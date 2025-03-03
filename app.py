@@ -25,11 +25,11 @@ add_db_docs(vectorstore, data_folder, embeddings_model)
 chat_history = get_session_history(session_id)
 
 while True:
-    question = input("\n Enter your question (or type 'exit' to quit): ")
+    question = input("\n\nEnter your question (or type 'exit' to quit): ")
     if question.lower() == 'exit':
         break
 
-    retriever = retrieve_docs(question, vectorstore, similar_docs_count = 5, see_content=True)
+    retriever = retrieve_docs(question, vectorstore, similar_docs_count = 5, see_content=False)
     rag_chain = setup_chain("deepseek-r1:1.5b", retriever)
 
     conversational_rag_chain = RunnableWithMessageHistory(
@@ -47,11 +47,11 @@ while True:
                 "configurable": {"session_id": session_id}
             },
     ):
-        if 'answer' in chunk:
-            filtered_chunk = filter_think_tokens(chunk['answer'])
-            print(filtered_chunk, end="", flush=True)
-            answer += filtered_chunk
 
+        if 'answer' in chunk:
+            answer += chunk['answer']
+
+    print(filter_think_tokens(answer), end="", flush=True)
     chat_history.add_user_message(question)
     chat_history.add_ai_message(answer)
 

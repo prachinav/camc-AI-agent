@@ -24,6 +24,6 @@ def retrieve_docs(question, vector_store, similar_docs_count, see_content:False)
     return retriever
 
 def filter_think_tokens(text):
-    """ Remove <think>...</think> tokens from the model's output. """
     filtered_text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL)
-    return filtered_text.strip()
+    filtered_text = re.sub(r'\s+', ' ', filtered_text).strip()
+    return filtered_text
