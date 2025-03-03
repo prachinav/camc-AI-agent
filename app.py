@@ -1,6 +1,6 @@
 import os
 import uuid
-from rag_functions.docs_preprocess import chunk_documents, call_embed_model, retrieve_docs, filter_think_tokens
+from rag_functions.docs_preprocess import chunk_documents, call_embed_model, retrieve_docs, filter_think_tokens, structure_answer
 from rag_functions.create_chain import setup_chain
 from rag_functions.database import init_db, add_db_docs, load_documents
 from rag_functions.chat_history import get_session_history, save_session_history
@@ -51,7 +51,8 @@ while True:
         if 'answer' in chunk:
             answer += chunk['answer']
 
-    print(filter_think_tokens(answer), end="", flush=True)
+    filtered = filter_think_tokens(answer)
+    print(structure_answer(filtered), end="", flush=True)
     chat_history.add_user_message(question)
     chat_history.add_ai_message(answer)
 

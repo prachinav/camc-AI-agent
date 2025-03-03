@@ -27,3 +27,16 @@ def filter_think_tokens(text):
     filtered_text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL)
     filtered_text = re.sub(r'\s+', ' ', filtered_text).strip()
     return filtered_text
+
+def structure_answer(answer):
+    lines = answer.split('\n')
+    structured_lines = []
+
+    for line in lines:
+        if line.strip().startswith(('1.', '2.', '3.', '4.', '5.', '6.', '7.', '-', '*')):
+            structured_lines.append(line)
+        else:
+            structured_lines.append(f"- {line}")
+
+    structured_answer = '\n'.join(structured_lines)
+    return structured_answer
