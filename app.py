@@ -1,10 +1,18 @@
 import os
 import uuid
-from rag_functions.docs_preprocess import chunk_documents, call_embed_model, retrieve_docs, filter_think_tokens, structure_answer
+import re
+import shutil
+from PIL import Image, ImageDraw
+from typing import Optional, Tuple
+from geopy.geocoders import Nominatim
+from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
+
+from rag_functions.docs_preprocess import chunk_documents, call_embed_model, retrieve_docs
 from rag_functions.create_chain import setup_chain
 from rag_functions.database import init_db, add_db_docs, load_documents
 from rag_functions.chat_history import get_session_history, save_session_history
 from langchain_core.runnables.history import RunnableWithMessageHistory
+from species_data_handler import SpeciesLocationEngine
 
 session_id = str(uuid.uuid4())
 
@@ -12,49 +20,109 @@ current_directory = os.path.dirname(os.path.abspath(__file__))
 data_folder = os.path.join(current_directory, "data")
 db_path = os.path.join(current_directory, "chroma_db")
 
-docs = load_documents(data_folder)
-chunks = chunk_documents(docs)
+species_engine = SpeciesLocationEngine()
+geolocator = Nominatim(user_agent="species_locator_app")
 
-embed_model_name = "sentence-transformers/all-MiniLM-L12-v2"
-embeddings_model = call_embed_model(embed_model_name)
+def is_location_query(question: str) -> bool:
+    triggers = ['grow in', 'plant in', 'species in', 'near', 'around', 'at coordinates', 'in region']
+    return any(trigger in question.lower() for trigger in triggers)
 
-vectorstore = init_db(chunks, embeddings_model, db_path)
+def get_location_coordinates(location_input: str) -> Optional[Tuple[float, float]]:
+    if ',' in location_input:
+        parts = [p.strip() for p in location_input.split(',')]
+        if len(parts) == 2:
+            try:
+                lat = float(parts[0])
+                lon = float(parts[1])
+                if -90 <= lat <= 90 and -180 <= lon <= 180:
+                    return (lat, lon)
+            except ValueError:
+                pass
 
-add_db_docs(vectorstore, data_folder, embeddings_model)
+    attempts = [
+        location_input,
+        location_input.title(),
+        location_input.replace("St ", "Saint ").replace("St. ", "Saint ")
+    ]
 
-chat_history = get_session_history(session_id)
+    country_matches = re.search(r',\s*([a-zA-Z\s]+)$', location_input)
+    if country_matches:
+        country = country_matches.group(1)
+        attempts.extend([
+            location_input,
+            f"{location_input.split(',')[0].strip()}"
+        ])
 
-while True:
-    question = input("\n\nEnter your question (or type 'exit' to quit): ")
-    if question.lower() == 'exit':
-        break
+    for attempt in attempts:
+        try:
+            location = geolocator.geocode(attempt, exactly_one=True, timeout=10)
+            if location:
+                return (location.latitude, location.longitude)
+        except (GeocoderTimedOut, GeocoderUnavailable):
+            continue
 
-    retriever = retrieve_docs(question, vectorstore, similar_docs_count = 5, see_content=False)
-    rag_chain = setup_chain("deepseek-r1:1.5b", retriever)
+    return None
 
-    conversational_rag_chain = RunnableWithMessageHistory(
-        rag_chain,
-        lambda _: chat_history,
-        input_messages_key="input",
-        history_messages_key="chat_history",
-        output_messages_key="answer",
-    )
+def extract_location_from_question(question: str) -> Optional[str]:
+    question_lower = question.lower()
+    patterns = [
+        r'(?:in|near|around|for)\s+(.+?)(?:\?|$)',
+        r'at\s+(.+?)(?:\?|$)',
+        r'coordinates\s+(.+?)(?:\?|$)',
+        r'in\s+(.+?)\s*,\s*(.+?)(?:\?|$)',
+        r'near\s+(.+?)\s*,\s*(.+?)(?:\?|$)'
+    ]
 
-    answer = ""
-    for chunk in conversational_rag_chain.stream(
-            {"input": question},
-            config={
-                "configurable": {"session_id": session_id}
-            },
-    ):
+    for pattern in patterns:
+        match = re.search(pattern, question_lower)
+        if match:
+            return ', '.join([g.strip() for g in match.groups() if g.strip()])
 
-        if 'answer' in chunk:
-            answer += chunk['answer']
+    return None
 
-    filtered = filter_think_tokens(answer)
-    print(structure_answer(filtered), end="", flush=True)
-    chat_history.add_user_message(question)
-    chat_history.add_ai_message(answer)
+def handle_location_query(question: str) -> Tuple[Optional[Tuple[float, float]], Optional[str]]:
+    location_str = extract_location_from_question(question)
+    if not location_str:
+        return None, "Please specify a location (e.g., 'What plants grow in Raleigh?')"
 
+    coords = get_location_coordinates(location_str)
+    if not coords:
+        return None, f"Could not find coordinates for: {location_str}"
 
-save_session_history(session_id)
+    return coords, None
+
+def generate_lagoa_rica_map(clone_scores, top_n=3):
+    # Sort top clones
+    top_clones = sorted(clone_scores.items(), key=lambda x: x[1], reverse=True)[:top_n]
+
+    # Paths
+    base_path = "data/LagoaRica.png"
+    output_path = "temp/Lagoa_Rica_Annotated.png"
+    public_path = "static/maps/Lagoa_Rica_Annotated.png"
+
+    os.makedirs("temp", exist_ok=True)
+    os.makedirs("static/maps", exist_ok=True)
+
+    if not os.path.exists(base_path):
+        raise FileNotFoundError(f"Map image not found: {base_path}")
+
+    # Generate annotation
+    base_image = Image.open(base_path).convert("RGBA")
+    overlay = Image.new("RGBA", base_image.size, (255, 255, 255, 0))
+    draw = ImageDraw.Draw(overlay)
+
+    draw.text((20, 30), "Top Recommended Clones:", fill=(255, 0, 0, 255))
+    for i, (clone, score) in enumerate(top_clones):
+        draw.text((20, 65 + i * 35), f"{i+1}. {clone} - Score {score:.2f}", fill=(255, 0, 0, 255))
+
+    # Save annotated map
+    annotated_image = Image.alpha_composite(base_image, overlay)
+    annotated_image.save(output_path)
+
+    if os.path.exists(output_path):
+        os.makedirs("static/maps", exist_ok=True)
+        shutil.copy(output_path, public_path)
+    else:
+        raise FileNotFoundError("Annotated image failed to save before copy")
+
+    return "/static/maps/Lagoa_Rica_Annotated.png"
