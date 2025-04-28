@@ -4,7 +4,6 @@ from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_community.chat_message_histories import ChatMessageHistory
 
-# Get directory to store session histories
 current_directory = os.path.dirname(os.path.abspath(__file__))
 history_dir = os.path.join(current_directory, "sessions")
 os.makedirs(history_dir, exist_ok=True)
