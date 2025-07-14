@@ -92,10 +92,8 @@ def handle_location_query(question: str) -> Tuple[Optional[Tuple[float, float]],
     return coords, None
 
 def generate_lagoa_rica_map(clone_scores, top_n=3):
-    # Sort top clones
     top_clones = sorted(clone_scores.items(), key=lambda x: x[1], reverse=True)[:top_n]
 
-    # Paths
     base_path = "data/LagoaRica.png"
     output_path = "temp/Lagoa_Rica_Annotated.png"
     public_path = "static/maps/Lagoa_Rica_Annotated.png"
@@ -106,7 +104,6 @@ def generate_lagoa_rica_map(clone_scores, top_n=3):
     if not os.path.exists(base_path):
         raise FileNotFoundError(f"Map image not found: {base_path}")
 
-    # Generate annotation
     base_image = Image.open(base_path).convert("RGBA")
     overlay = Image.new("RGBA", base_image.size, (255, 255, 255, 0))
     draw = ImageDraw.Draw(overlay)
@@ -115,7 +112,6 @@ def generate_lagoa_rica_map(clone_scores, top_n=3):
     for i, (clone, score) in enumerate(top_clones):
         draw.text((20, 65 + i * 35), f"{i+1}. {clone} - Score {score:.2f}", fill=(255, 0, 0, 255))
 
-    # Save annotated map
     annotated_image = Image.alpha_composite(base_image, overlay)
     annotated_image.save(output_path)
 
