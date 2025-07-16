@@ -25,6 +25,8 @@ from app import (
 )
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
+from species_data_handler import get_species_for_location
+
 app = Flask(__name__)
 
 data_folder = "data"
@@ -144,11 +146,15 @@ def chat():
             response_text = error
         else:
             lat, lon = coords
-            nearby_studies = species_engine.find_nearby_studies(lat, lon)
-            if not nearby_studies:
-                response_text = "No studies found near this location."
+            try:
+                species_list = get_species_for_location(lat, lon)
+            except Exception as e:
+                response_text = f"Database error: {str(e)}"
+                species_list = []
+
+            if not species_list:
+                response_text = "No species found near this location."
             else:
-                recommendations = species_engine.recommend_species(nearby_studies)
                 try:
                     location = geolocator.reverse(f"{lat},{lon}")
                     location_name = location.address.split(',')[0] if location else f"{lat:.4f}, {lon:.4f}"
@@ -158,12 +164,9 @@ def chat():
                 prompt = (
                         f"User asked: {user_input}\n\n"
                         f"Location: {location_name}\n"
-                        f"Studies analyzed: {len(nearby_studies)}\n"
-                        f"Closest study: {nearby_studies[0]['distance_km']:.1f}km away\n\n"
-                        "Scientific recommendations:\n" + "\n".join([
-                    f"- {species_code_to_name.get(s['code'], s['name'])} ({s['code']}): "
-                    f"Score {s['avg_score']:.1f}, Frost: {s['Frost Tolerance']}, Height: {s['Dominant Height Mean']}m"
-                    for s in recommendations[:3]
+                        f"Species found: {len(species_list)}\n\n"
+                        f"Species List:\n" + "\n".join([
+                    f"- {s}" for s in species_list[:5]
                 ])
                 )
                 response_text = None
@@ -211,25 +214,6 @@ def chat():
     save_session_history(session_id)
 
     return jsonify({"response": response_text})
-
-@app.route("/species_locator", methods=["POST"])
-def species_locator():
-    data = request.json
-    lat = data.get("lat")
-    lon = data.get("lon")
-
-    if lat is None or lon is None:
-        return jsonify({"error": "Missing latitude or longitude"}), 400
-
-    nearby_studies = species_engine.find_nearby_studies(lat, lon)
-
-    if not nearby_studies:
-        return jsonify({"message": "No studies found near this location."})
-
-    recommendations = species_engine.recommend_species(nearby_studies)
-    species_names = [species_code_to_name.get(s['code'], s['name']) for s in recommendations[:3]]
-
-    return jsonify({"recommended_species": species_names})
 
 
 @app.route("/history/<session_id>")

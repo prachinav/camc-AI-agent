@@ -1,0 +1,19 @@
+﻿Genetic material,Code,Frost Tolerance,Number of Trials,Number of Trees,Dominant Heights (m) Mean,Dominant Heights (m) St.Dev,Dominant Heights (m) Min,Dominant Heights (m) Max
+P. caribaea var. hondurensis,PCAR,Susceptible,29,1732,14.5,2.4,8.5,20.1
+P. caribaea × P. oocarpa,PCARxPOOC,Susceptible,31,177,14.1,3.4,7.3,21.8
+P. caribaea × P. tecunumanii low elevation,PCARxPTEL,Susceptible,32,187,14.6,3.3,9.1,22.2
+P. elliottii,PELL,Tolerant,47,418,12.3,2.2,7.1,17.2
+P. elliottii × P. caribaea,PELLxPCAR,Intermediate,40,288,13.4,3,6,21.2
+P. greggii var. greggii,PGRN,Tolerant,38,602,9.2,1.6,6,13.4
+P. greggii var. australis,PGRS,Intermediate,39,841,12.9,2.9,6.6,19.7
+P. maximinoi,PMAX,Intermediate,68,2648,16.5,3.5,7,26
+P. oocarpa,POOC,Susceptible,47,1557,13.4,2.9,6,22
+P. patula,PPAT,Tolerant,79,3149,13.2,1.9,7.8,18.4
+P. patula × P. elliottii,PPATxPELL,Tolerant,32,233,13.8,2.8,7.1,20.7
+P. patula × P. greggii var. australis,PPATxPGRS,Tolerant,38,259,13.6,2.7,6.2,20.4
+P. patula × P. oocarpa,PPATxPOOC,Intermediate,44,280,14.2,2.8,6.7,21.3
+P. patula × P. tecunumanii high elevation,PPATxPTEH,Tolerant,48,333,14.6,3,7.1,22
+P. patula × P. tecunumanii low elevation,PPATxPTEL,Intermediate,40,217,14.4,2.5,8,20.6
+P. taeda,PTAE,Tolerant,51,2799,14.3,2.1,8.5,20.3
+P. tecunumanii high elevation,PTEH,Tolerant,79,2226,15.4,2.6,8.9,21.9
+P. tecunumanii low elevation,PTEL,Susceptible,87,1699,15.8,3.3,7.5,25.2
