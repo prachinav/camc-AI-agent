@@ -8,15 +8,11 @@ def get_species_for_location(lat, lon):
         query = f.read()
 
     conn, tunnel = get_db_connection()
-    print("Back to handler")
-    print(conn)
     try:
         with conn.cursor() as cursor:
-            print(lon, lat)
-            cursor.execute(query, (lon, lat))
+            cursor.execute(query, (lon, lat))  # Note: lon, lat order for PostGIS
             results = cursor.fetchall()
-            print("Results***************")
-            print(results)
+            # Assuming species name is in column 0
             species = [row[0] for row in results]
             return species
     finally:

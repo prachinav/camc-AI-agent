@@ -12,6 +12,7 @@ from rag_functions.create_chain import setup_chain
 from rag_functions.database import init_db, add_db_docs, load_documents
 from rag_functions.chat_history import get_session_history, save_session_history
 from langchain_core.runnables.history import RunnableWithMessageHistory
+from species_data_handler import SpeciesLocationEngine
 
 session_id = str(uuid.uuid4())
 
@@ -19,6 +20,7 @@ current_directory = os.path.dirname(os.path.abspath(__file__))
 data_folder = os.path.join(current_directory, "data")
 db_path = os.path.join(current_directory, "chroma_db")
 
+species_engine = SpeciesLocationEngine()
 geolocator = Nominatim(user_agent="species_locator_app")
 
 def is_location_query(question: str) -> bool:
