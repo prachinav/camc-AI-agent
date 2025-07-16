@@ -7,11 +7,12 @@ import os
 import re
 import json
 import pandas as pd
+from dotenv import load_dotenv
+load_dotenv()
 
 from app import (
     is_location_query,
     handle_location_query,
-    species_engine,
     geolocator,
     retrieve_docs,
     setup_chain,
@@ -28,7 +29,6 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from species_data_handler import get_species_for_location
 
 app = Flask(__name__)
-
 data_folder = "data"
 db_path = "chroma_db"
 docs = load_documents(data_folder)
@@ -148,6 +148,7 @@ def chat():
             lat, lon = coords
             try:
                 species_list = get_species_for_location(lat, lon)
+                print("Species List:" + species_list)
             except Exception as e:
                 response_text = f"Database error: {str(e)}"
                 species_list = []
@@ -169,6 +170,8 @@ def chat():
                     f"- {s}" for s in species_list[:5]
                 ])
                 )
+
+                print(prompt)
                 response_text = None
 
     if response_text is None:
