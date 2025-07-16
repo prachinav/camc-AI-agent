@@ -1,4 +1,6 @@
 import csv
+from dotenv import load_dotenv
+load_dotenv()
 
 import requests
 from flask import Flask, request, jsonify, render_template, redirect, url_for
@@ -11,7 +13,6 @@ import pandas as pd
 from app import (
     is_location_query,
     handle_location_query,
-    species_engine,
     geolocator,
     retrieve_docs,
     setup_chain,
@@ -148,6 +149,7 @@ def chat():
             lat, lon = coords
             try:
                 species_list = get_species_for_location(lat, lon)
+                print(species_list)
             except Exception as e:
                 response_text = f"Database error: {str(e)}"
                 species_list = []
@@ -170,6 +172,7 @@ def chat():
                 ])
                 )
                 response_text = None
+                print(prompt)
 
     if response_text is None:
         prompt = user_input if 'prompt' not in locals() else prompt
