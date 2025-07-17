@@ -1,7 +1,0 @@
-/venv
-.env
-/__pycache__
-/rag_functions/__pycache__
-chroma_db/chroma.sqlite3
-/chroma_db
-/rag_functions/sessions
