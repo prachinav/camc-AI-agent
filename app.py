@@ -64,9 +64,11 @@ def get_location_coordinates(location_input: str) -> Optional[Tuple[float, float
 def extract_location_from_question(question: str) -> Optional[str]:
     question_lower = question.lower()
     patterns = [
+        r'coordinates\s*(-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?)',    
+        r'at\s*(-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?)',           
+        r'\b(-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?)\b',             
         r'(?:in|near|around|for)\s+(.+?)(?:\?|$)',
         r'at\s+(.+?)(?:\?|$)',
-        r'coordinates\s+(.+?)(?:\?|$)',
         r'in\s+(.+?)\s*,\s*(.+?)(?:\?|$)',
         r'near\s+(.+?)\s*,\s*(.+?)(?:\?|$)'
     ]
